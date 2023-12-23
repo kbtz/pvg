@@ -1,6 +1,6 @@
+import transformer from './transformer.js'
 import middleware from './middleware.js'
 import bundler from './bundler.js'
-import transformIndexHtml from './transformer.js'
 import { file } from './utils.js'
 
 /**
@@ -8,8 +8,9 @@ import { file } from './utils.js'
  */
 function pvg({ pattern }) {
 	let
-		input = file.find(pattern),
-		building = false
+		/** @type import('vite').UserConfig */
+		config, building = false,
+		input = file.find(pattern)
 
 	return [{
 		name: 'pvg',
@@ -21,6 +22,7 @@ function pvg({ pattern }) {
 			
 			return { build: { rollupOptions: { input } } }
 		},
+		configResolved: resolved => config = resolved,
 		resolveId(id) {
 			console.log('R', id)
 			return null
@@ -33,11 +35,6 @@ function pvg({ pattern }) {
 			
 			return content
 		},
-		configResolved: (c) => {
-			console.log('resolved')
-			console.log(c.build.rollupOptions.input)
-			
-		},
 		buildStart: async () => {
 			console.log('start')
 			if(!building || !input.length) return
@@ -48,7 +45,28 @@ function pvg({ pattern }) {
 			if(!building || !input.length) return
 			await file.rename(input, x => x.replace('.html', ''))
 		},
-		transformIndexHtml
+		handleHotUpdate: async ({ file, server, read }) => {
+			if (input.includes(file)) {
+				const
+					content = await read(),
+					output = await transformer(content, {
+						filename: file, server: true,
+						path: file.replace(config.root, '')
+					})
+
+				server.ws.send({
+					type: 'custom',
+					event: 'pvg:update',
+					data: { output }
+				})
+
+				return []
+			}
+		},
+		transformIndexHtml: {
+			order: 'pre',
+			handler: transformer
+		}
 	}, bundler, middleware]
 }
 
