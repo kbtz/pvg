@@ -1,0 +1,14 @@
+{
+	"name": "pvg",
+	"type": "module",
+	"version": "0.1.0",
+	"dependencies": {
+		"pug": "^3.0.2",
+		"fast-glob": "^3.3.2"
+	},
+	"peerDependencies": {
+		"vite": "^5.0.10"
+	},
+	"author": "kbtz <contact@kbtz.dev>",
+	"license": "Unlicense"
+}
