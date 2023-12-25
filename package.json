@@ -5,10 +5,10 @@
 	"dependencies": {
 		"fast-glob": "^3.3.2",
 		"morphdom": "^2.7.1",
-		"pug": "^3.0.2"
-	},
-	"peerDependencies": {
-		"vite": "^5.0.10"
+		"pug": "3.0.x",
+		"stylus": "0.x",
+		"vite": "5.x",
+		"yaml": "^2.3.4"
 	},
 	"author": "kbtz <contact@kbtz.dev>",
 	"license": "Unlicense"

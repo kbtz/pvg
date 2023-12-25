@@ -12,11 +12,18 @@ export default {
 		() => // wrapped so it becomes a post middleware
 		middlewares.use(async (req, res, next) => {
 			let 
-				entry = path(config.root + path.fromUrl(req.originalUrl)),
+				entry = config.root + path.fromUrl(req.originalUrl),
 				entries = config.build.rollupOptions.input
 			
+			if (path.isDir(entry) && !entry.endsWith('/')) {
+				// enforce trailing slash for consistent relative paths
+				res.writeHead(301, { Location: req.originalUrl + '/' })
+				res.end()
+				return
+			}
+
 			if (path.isDir(entry))
-				entry += '/index.html'
+				entry = path(entry, 'index.html')
 
 			entry = entry.replace(/\.html$/, '.pug')
 
@@ -26,7 +33,7 @@ export default {
 				&& entries.includes(entry)
 			) {
 				let 
-					input = file.read(entry).toString(),
+					input = file.read(entry),
 					template = entry.replace(config.root, ''),
 					output = await transformIndexHtml(template, input)
 

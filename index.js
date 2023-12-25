@@ -1,16 +1,18 @@
+import './data-loader.js'
+import { file, remove } from './utils.js'
+
 import transformer from './transformer.js'
 import middleware from './middleware.js'
 import bundler from './bundler.js'
-import { file } from './utils.js'
 
 /**
  * @returns {import('vite').Plugin[]}
  */
-function pvg({ pattern }) {
+function pvg({ match }) {
 	let
 		/** @type import('vite').UserConfig */
 		config, building = false,
-		input = file.find(pattern)
+		input = file.find(match)
 
 	return [{
 		name: 'pvg',
@@ -22,7 +24,9 @@ function pvg({ pattern }) {
 			
 			return { build: { rollupOptions: { input } } }
 		},
-		configResolved: resolved => config = resolved,
+		configResolved: resolved => {
+			config = resolved
+		},
 		resolveId(id) {
 			console.log('R', id)
 			return null
@@ -30,13 +34,14 @@ function pvg({ pattern }) {
 		transform(content, id) {
 			console.log('T', id)
 			
-			if (id.endsWith('.pug'))
-				content = { code: `console.debug("[pvg] watching ${id} for changes")` }
+			if (id.endsWith('.pug')) {
+				let info = `[pvg] watching ${remove(config.root + '/', id)} for changes`
+				content = { code: `console.debug("${info}")` }
+			}
 			
 			return content
 		},
 		buildStart: async () => {
-			console.log('start')
 			if(!building || !input.length) return
 			const realInput = input.map(x => x.replace('.html', ''))
 			await file.rename(realInput, f => f + '.html')
@@ -62,6 +67,7 @@ function pvg({ pattern }) {
 
 				return []
 			}
+			console.log('H', file)
 		},
 		transformIndexHtml: {
 			order: 'pre',
@@ -70,6 +76,6 @@ function pvg({ pattern }) {
 	}, bundler, middleware]
 }
 
-pvg.match = pattern => pvg({ pattern })
+pvg.match = pattern => pvg({ match: pattern })
 
 export default pvg
