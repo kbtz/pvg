@@ -1,4 +1,5 @@
 import pug from 'pug'
+import { pugLoader } from './data-loader.js'
 
 /**
  * @type {import('vite').IndexHtmlTransformHook}
@@ -19,6 +20,11 @@ export default async (content, { path, filename, server }) => {
 			compileDebug: false,
 			inlineRuntimeFunctions: false
 		}
+
+	let data = pugLoader(content, filename)
+	if (data) Object.assign(options, data)
+
+	content = content.replace(/^\+load\(.*\)\s*$/gm, '')
 
 	let output = pug.render(content, options)
 
